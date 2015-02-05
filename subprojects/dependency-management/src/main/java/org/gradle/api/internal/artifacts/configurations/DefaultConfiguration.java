@@ -58,7 +58,7 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
     private final DependencyMetaDataProvider metaDataProvider;
     private final DefaultDependencySet dependencies;
     private final CompositeDomainObjectSet<Dependency> inheritedDependencies;
-    private final DefaultDependencySet allDependencies;
+    private final SubstitutingDependencySet allDependencies;
     private final DefaultPublishArtifactSet artifacts;
     private final CompositeDomainObjectSet<PublishArtifact> inheritedArtifacts;
     private final DefaultPublishArtifactSet allArtifacts;
@@ -94,7 +94,7 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
 
         dependencies = new DefaultDependencySet(String.format("%s dependencies", getDisplayName()), ownDependencies);
         inheritedDependencies = CompositeDomainObjectSet.create(Dependency.class, ownDependencies);
-        allDependencies = new DefaultDependencySet(String.format("%s all dependencies", getDisplayName()), inheritedDependencies);
+        allDependencies = new SubstitutingDependencySet(String.format("%s all dependencies", getDisplayName()), inheritedDependencies, resolutionStrategy);
 
         DefaultDomainObjectSet<PublishArtifact> ownArtifacts = new DefaultDomainObjectSet<PublishArtifact>(PublishArtifact.class);
         ownArtifacts.beforeChange(new VetoContainerChangeAction());

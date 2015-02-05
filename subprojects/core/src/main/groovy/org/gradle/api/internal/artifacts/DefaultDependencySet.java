@@ -24,6 +24,9 @@ import org.gradle.api.internal.tasks.AbstractTaskDependency;
 import org.gradle.api.internal.tasks.TaskDependencyResolveContext;
 import org.gradle.api.tasks.TaskDependency;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class DefaultDependencySet extends DelegatingDomainObjectSet<Dependency> implements DependencySet {
     private final TaskDependency builtBy = new DependencySetTaskDependency();
     private final String displayName;
