@@ -49,7 +49,7 @@ public class DefaultResolutionResultBuilder implements ResolutionResultBuilder {
         createOrGet(moduleVersion.getId(), moduleVersion.getSelectionReason(), moduleVersion.getComponentId());
     }
 
-    public void resolvedConfiguration(ModuleVersionIdentifier id, Collection<? extends InternalDependencyResult> dependencies) {
+    public void resolvedConfiguration(ModuleVersionIdentifier id, String configuration, Collection<? extends InternalDependencyResult> dependencies) {
         for (InternalDependencyResult d : dependencies) {
             DefaultResolvedComponentResult from = modules.get(id);
             DependencyResult dependency;
@@ -57,7 +57,7 @@ public class DefaultResolutionResultBuilder implements ResolutionResultBuilder {
                 dependency = dependencyResultFactory.createUnresolvedDependency(d.getRequested(), from, d.getReason(), d.getFailure());
             } else {
                 DefaultResolvedComponentResult selected = modules.get(d.getSelected());
-                dependency = dependencyResultFactory.createResolvedDependency(d.getRequested(), from, selected);
+                dependency = dependencyResultFactory.createResolvedDependency(d.getRequested(), from, selected, configuration);
                 selected.addDependent((ResolvedDependencyResult) dependency);
             }
             from.addDependency(dependency);

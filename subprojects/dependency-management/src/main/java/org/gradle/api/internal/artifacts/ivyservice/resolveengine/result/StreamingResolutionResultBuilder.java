@@ -22,13 +22,13 @@ import org.gradle.api.artifacts.component.ComponentSelector;
 import org.gradle.api.artifacts.result.ResolutionResult;
 import org.gradle.api.artifacts.result.ResolvedComponentResult;
 import org.gradle.api.internal.artifacts.ModuleVersionIdentifierSerializer;
-import org.gradle.internal.resolve.ModuleVersionResolveException;
 import org.gradle.api.internal.artifacts.result.DefaultResolutionResult;
 import org.gradle.api.internal.cache.BinaryStore;
 import org.gradle.api.internal.cache.Store;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.internal.Factory;
+import org.gradle.internal.resolve.ModuleVersionResolveException;
 import org.gradle.messaging.serialize.Decoder;
 import org.gradle.messaging.serialize.Encoder;
 import org.gradle.util.Clock;
@@ -93,15 +93,17 @@ public class StreamingResolutionResultBuilder implements ResolutionResultBuilder
         }
     }
 
-    public void resolvedConfiguration(final ModuleVersionIdentifier from, final Collection<? extends InternalDependencyResult> dependencies) {
+    public void resolvedConfiguration(final ModuleVersionIdentifier from, final String configuration, final Collection<? extends InternalDependencyResult> dependencies) {
         if (!dependencies.isEmpty()) {
             store.write(new BinaryStore.WriteAction() {
                 public void write(Encoder encoder) throws IOException {
                     encoder.writeByte(DEPENDENCY);
                     moduleVersionIdentifierSerializer.write(encoder, from);
+                    encoder.writeString(configuration);
                     encoder.writeSmallInt(dependencies.size());
                     for (InternalDependencyResult dependency : dependencies) {
                         internalDependencyResultSerializer.write(encoder, dependency);
+
                         if (dependency.getFailure() != null) {
                             //by keying the failures only be 'requested' we lose some precision
                             //at edge case we'll lose info about a different exception if we have different failure for the same requested version
@@ -176,12 +178,13 @@ public class StreamingResolutionResultBuilder implements ResolutionResultBuilder
                             break;
                         case DEPENDENCY:
                             id = moduleVersionIdentifierSerializer.read(decoder);
+                            String configuration = decoder.readString();
                             int size = decoder.readSmallInt();
                             List<InternalDependencyResult> deps = new LinkedList<InternalDependencyResult>();
                             for (int i = 0; i < size; i++) {
                                 deps.add(internalDependencyResultSerializer.read(decoder, failures));
                             }
-                            builder.resolvedConfiguration(id, deps);
+                            builder.resolvedConfiguration(id, configuration, deps);
                             break;
                         case DONE:
                             ResolvedComponentResult root = builder.complete().getRoot();

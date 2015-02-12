@@ -46,10 +46,10 @@ public class CachingDependencyResultFactory {
         return unresolvedDependencies.get(key);
     }
 
-    public ResolvedDependencyResult createResolvedDependency(ComponentSelector requested, ResolvedComponentResult from, DefaultResolvedComponentResult selected) {
+    public ResolvedDependencyResult createResolvedDependency(ComponentSelector requested, ResolvedComponentResult from, DefaultResolvedComponentResult selected, String configuration) {
         List<Object> key = asList(requested, from, selected);
         if (!resolvedDependencies.containsKey(key)) {
-            resolvedDependencies.put(key, new DefaultResolvedDependencyResult(requested, selected, from));
+            resolvedDependencies.put(key, new DefaultResolvedDependencyResult(requested, selected, from, configuration));
         }
         return resolvedDependencies.get(key);
     }

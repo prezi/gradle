@@ -34,7 +34,7 @@ class ResolutionResultDependencyGraphVisitor implements DependencyGraphVisitor {
     }
 
     public void visitEdge(DependencyGraphBuilder.ConfigurationNode resolvedConfiguration) {
-        newModelBuilder.resolvedConfiguration(resolvedConfiguration.toId(), resolvedConfiguration.outgoingEdges);
+        newModelBuilder.resolvedConfiguration(resolvedConfiguration.toId(), resolvedConfiguration.id.getConfiguration(), resolvedConfiguration.outgoingEdges);
     }
 
     public void finish(DependencyGraphBuilder.ConfigurationNode root) {

@@ -23,8 +23,10 @@ import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.*;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
+import org.gradle.api.artifacts.result.DependencyResult;
 import org.gradle.api.artifacts.result.ResolutionResult;
 import org.gradle.api.artifacts.result.ResolvedComponentResult;
+import org.gradle.api.artifacts.result.ResolvedDependencyResult;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.internal.CompositeDomainObjectSet;
 import org.gradle.api.internal.DefaultDomainObjectSet;
@@ -270,40 +272,27 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
         }
     }
 
-    private void collectProjectDependencies(Set<ResolvedDependency> resolvedDependencies, Map<ModuleVersionIdentifier, Project> projectMapping, DefaultTaskDependency taskDependency) {
-        for (ResolvedDependency dependency : resolvedDependencies) {
-            if (dependency instanceof DefaultResolvedDependency) {
-                DefaultResolvedDependency resolvedDependency = (DefaultResolvedDependency) dependency;
-                ResolvedConfigurationIdentifier id = resolvedDependency.getId();
-                Project project = projectMapping.get(id.getId());
-
-                if (project != null) {
-                    Configuration targetConfig = project.getConfigurations().getByName(id.getConfiguration());
-                    taskDependency.add(targetConfig.getAllArtifacts());
-                }
-            }
-
-            // Handling transitive dependencies
-            collectProjectDependencies(dependency.getChildren(), projectMapping, taskDependency);
-        }
-    }
-
     public TaskDependency getBuildDependencies() {
         DefaultTaskDependency taskDependency = new DefaultTaskDependency();
         taskDependency.add(allDependencies.getBuildDependencies());
+        collectProjectTaskDependencies(getIncoming().getResolutionResult().getRoot(), taskDependency);
+        return taskDependency;
+    }
 
-        final Map<ModuleVersionIdentifier, Project> projectMapping = new HashMap<ModuleVersionIdentifier, Project>();
-        for (ResolvedComponentResult resolvedComponentResult : getIncoming().getResolutionResult().getAllComponents()) {
-            if (resolvedComponentResult.getId() instanceof ProjectComponentIdentifier) {
-                ProjectComponentIdentifier projectId = (ProjectComponentIdentifier)resolvedComponentResult.getId();
-                Project project = projectFinder.getProject(projectId.getProjectPath());
-                projectMapping.put(resolvedComponentResult.getModuleVersion(), project);
+    private void collectProjectTaskDependencies(ResolvedComponentResult sourceComponent, DefaultTaskDependency taskDependency) {
+        for (DependencyResult dependency : sourceComponent.getDependencies()) {
+            if (dependency instanceof ResolvedDependencyResult) {
+                ResolvedDependencyResult resolvedDependency = (ResolvedDependencyResult) dependency;
+                ResolvedComponentResult targetComponent = resolvedDependency.getSelected();
+                if (targetComponent.getId() instanceof ProjectComponentIdentifier) {
+                    ProjectComponentIdentifier targetProjectId = (ProjectComponentIdentifier) targetComponent.getId();
+                    Project targetProject = projectFinder.getProject(targetProjectId.getProjectPath());
+                    Configuration targetConfig = targetProject.getConfigurations().getByName(resolvedDependency.getConfiguration());
+                    taskDependency.add(targetConfig.getAllArtifacts());
+                }
+                collectProjectTaskDependencies(targetComponent, taskDependency);
             }
         }
-
-        collectProjectDependencies(getResolvedConfiguration().getFirstLevelModuleDependencies(), projectMapping, taskDependency);
-
-        return taskDependency;
     }
 
     /**

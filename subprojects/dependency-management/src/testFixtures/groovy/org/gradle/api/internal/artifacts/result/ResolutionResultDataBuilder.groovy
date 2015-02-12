@@ -28,8 +28,8 @@ import static org.gradle.api.internal.artifacts.DefaultModuleVersionSelector.new
 
 class ResolutionResultDataBuilder {
 
-    static DefaultResolvedDependencyResult newDependency(String group='a', String module='a', String version='1', String selectedVersion='1') {
-        new DefaultResolvedDependencyResult(DefaultModuleComponentSelector.newSelector(group, module, version), newModule(group, module, selectedVersion), newModule())
+    static DefaultResolvedDependencyResult newDependency(String group='a', String module='a', String version='1', String selectedVersion='1', String configuration='default') {
+        new DefaultResolvedDependencyResult(DefaultModuleComponentSelector.newSelector(group, module, version), newModule(group, module, selectedVersion), newModule(), configuration)
     }
 
     static DefaultUnresolvedDependencyResult newUnresolvedDependency(String group='x', String module='x', String version='1', String selectedVersion='1') {
@@ -42,7 +42,7 @@ class ResolutionResultDataBuilder {
         new DefaultResolvedComponentResult(newId(group, module, version), selectionReason, new DefaultModuleComponentIdentifier(group, module, version))
     }
 
-    static DefaultResolvedDependencyResult newDependency(ComponentSelector componentSelector, String group='a', String module='a', String selectedVersion='1') {
-        new DefaultResolvedDependencyResult(componentSelector, newModule(group, module, selectedVersion), newModule())
+    static DefaultResolvedDependencyResult newDependency(ComponentSelector componentSelector, String group='a', String module='a', String selectedVersion='1', String configuration='default') {
+        new DefaultResolvedDependencyResult(componentSelector, newModule(group, module, selectedVersion), newModule(), configuration)
     }
 }

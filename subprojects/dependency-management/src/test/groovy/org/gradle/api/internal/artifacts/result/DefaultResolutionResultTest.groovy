@@ -77,7 +77,7 @@ class DefaultResolutionResultTest extends Specification {
         def root = newModule('a', 'a', '1')
         def dep1 = newDependency('b', 'b', '1')
         root.addDependency(dep1)
-        dep1.selected.addDependency(new DefaultResolvedDependencyResult(DefaultModuleComponentSelector.newSelector('a', 'a', '1'), root, dep1.selected))
+        dep1.selected.addDependency(new DefaultResolvedDependencyResult(DefaultModuleComponentSelector.newSelector('a', 'a', '1'), root, dep1.selected, configuration))
 
         when:
         def deps = new DefaultResolutionResult({root} as Factory).allDependencies

@@ -22,14 +22,21 @@ import org.gradle.api.artifacts.result.ResolvedDependencyResult;
 
 public class DefaultResolvedDependencyResult extends AbstractDependencyResult implements ResolvedDependencyResult {
     private final ResolvedComponentResult selected;
+    private final String configuration;
 
-    public DefaultResolvedDependencyResult(ComponentSelector requested, ResolvedComponentResult selected, ResolvedComponentResult from) {
+    public DefaultResolvedDependencyResult(ComponentSelector requested, ResolvedComponentResult selected, ResolvedComponentResult from, String configuration) {
         super(requested, from);
         this.selected = selected;
+        this.configuration = configuration;
     }
 
     public ResolvedComponentResult getSelected() {
         return selected;
+    }
+
+    @Override
+    public String getConfiguration() {
+        return configuration;
     }
 
     @Override

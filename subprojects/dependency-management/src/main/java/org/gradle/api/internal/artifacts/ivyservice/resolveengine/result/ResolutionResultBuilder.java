@@ -26,6 +26,6 @@ import java.util.Collection;
 public interface ResolutionResultBuilder {
     ResolutionResultBuilder start(ModuleVersionIdentifier root, ComponentIdentifier componentIdentifier);
     void resolvedModuleVersion(ModuleVersionSelection moduleVersion);
-    void resolvedConfiguration(ModuleVersionIdentifier id, Collection<? extends InternalDependencyResult> dependencies);
+    void resolvedConfiguration(ModuleVersionIdentifier id, String configuration, Collection<? extends InternalDependencyResult> dependencies);
     ResolutionResult complete();
 }
