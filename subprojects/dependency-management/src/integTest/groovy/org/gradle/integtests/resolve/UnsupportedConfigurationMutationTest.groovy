@@ -28,6 +28,17 @@ import spock.lang.Issue
 // TODO - warn about changes to resolution strategy and other mutations
 class UnsupportedConfigurationMutationTest extends AbstractIntegrationSpec {
 
+    def "resolve() switches configuration from mutable to immutable"() {
+        buildFile << """
+            configurations { a }
+            assert configurations.a.mutable == true
+            configurations.a.resolve()
+            assert configurations.a.mutable == false
+        """
+        when: succeeds()
+        then: noExceptionThrown()
+    }
+
     def "does not allow adding dependencies to a configuration that has been resolved"() {
         buildFile << """
             configurations { a }
@@ -36,6 +47,17 @@ class UnsupportedConfigurationMutationTest extends AbstractIntegrationSpec {
         """
         when: fails()
         then: failure.assertHasCause("Cannot change configuration ':a' after it has been resolved.")
+    }
+
+    def "allows adding dependencies to a mutable configuration that has been resolved"() {
+        buildFile << """
+            configurations { a }
+            configurations.a.resolve()
+            configurations.a.mutable = true
+            dependencies { a files("some.jar") }
+        """
+        when: succeeds()
+        then: noExceptionThrown()
     }
 
     def "does not allow adding artifacts to a configuration that has been resolved"() {
@@ -48,6 +70,17 @@ class UnsupportedConfigurationMutationTest extends AbstractIntegrationSpec {
         then: failure.assertHasCause("Cannot change configuration ':a' after it has been resolved.")
     }
 
+    def "allows adding artifacts to a mutable configuration that has been resolved"() {
+        buildFile << """
+            configurations { a }
+            configurations.a.resolve()
+            configurations.a.mutable = true
+            artifacts { a file("some.jar") }
+        """
+        when: succeeds()
+        then: noExceptionThrown()
+    }
+
     def "does not allow changing a configuration that has been resolved"() {
         buildFile << """
             configurations { a }
@@ -56,6 +89,17 @@ class UnsupportedConfigurationMutationTest extends AbstractIntegrationSpec {
         """
         when: fails()
         then: failure.assertHasCause("Cannot change configuration ':a' after it has been resolved.")
+    }
+
+    def "allows changing a mutable configuration that has been resolved"() {
+        buildFile << """
+            configurations { a }
+            configurations.a.resolve()
+            configurations.a.mutable = true
+            configurations.a.exclude group: 'someGroup'
+        """
+        when: succeeds()
+        then: noExceptionThrown()
     }
 
     @Issue("GRADLE-3155")
@@ -125,6 +169,24 @@ class UnsupportedConfigurationMutationTest extends AbstractIntegrationSpec {
         when: fails()
         then: output.contains("Attempting to change configuration ':a' after it has been included in dependency resolution. This behaviour has been deprecated and is scheduled to be removed in Gradle 3.0")
         and: failure.assertHasCause("Cannot change configuration ':a' after it has been resolved.")
+    }
+
+    def "warning is not upgraded to an error when mutable configuration is resolved"() {
+        buildFile << """
+            configurations {
+                a
+                b.extendsFrom a
+            }
+            configurations.b.resolve()
+            configurations.a.exclude group: 'someGroup'
+            configurations.a.resolve()
+            configurations.a.mutable = true
+            configurations.a.exclude group: 'otherGroup'
+        """
+        executer.withDeprecationChecksDisabled()
+
+        when: succeeds()
+        then: output.contains("Attempting to change configuration ':a' after it has been included in dependency resolution. This behaviour has been deprecated and is scheduled to be removed in Gradle 3.0")
     }
 
     @Issue("GRADLE-3155")

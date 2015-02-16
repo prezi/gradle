@@ -37,6 +37,8 @@ import org.gradle.util.CollectionUtils;
 import org.gradle.util.ConfigureUtil;
 import org.gradle.util.DeprecationLogger;
 import org.gradle.util.WrapUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.*;
@@ -44,6 +46,8 @@ import java.util.*;
 import static org.apache.ivy.core.module.descriptor.Configuration.Visibility;
 
 public class DefaultConfiguration extends AbstractFileCollection implements ConfigurationInternal {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultConfiguration.class);
 
     private final String path;
     private final String name;
@@ -69,6 +73,7 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
     // This lock only protects the following fields
     private final Object lock = new Object();
     private State state = State.UNRESOLVED;
+    private boolean mutable = true;
     private boolean includedInResult;
     private ResolverResults cachedResolverResults;
     private final ResolutionStrategyInternal resolutionStrategy;
@@ -110,6 +115,18 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
     public State getState() {
         synchronized (lock) {
             return state;
+        }
+    }
+
+    public boolean isMutable() {
+        synchronized (lock) {
+            return mutable;
+        }
+    }
+
+    public void setMutable(boolean mutable) {
+        synchronized (lock) {
+            this.mutable = mutable;
         }
     }
 
@@ -257,6 +274,7 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
                 } else {
                     state = State.RESOLVED;
                 }
+                this.mutable = false;
                 broadcast.afterResolve(incoming);
             }
         }
@@ -398,8 +416,15 @@ public class DefaultConfiguration extends AbstractFileCollection implements Conf
     }
 
     private void validateMutation() {
-        if (getState() != State.UNRESOLVED) {
-            throw new InvalidUserDataException(String.format("Cannot change %s after it has been resolved.", getDisplayName()));
+        synchronized (lock) {
+            if (state != State.UNRESOLVED) {
+                if (!mutable) {
+                    throw new InvalidUserDataException(String.format("Cannot change %s after it has been resolved.", getDisplayName()));
+                } else {
+                    LOGGER.debug("Setting configuration '{}' back to un-resolved state", path);
+                    state = State.UNRESOLVED;
+                }
+            }
         }
         if (includedInResult) {
             DeprecationLogger.nagUserOfDeprecatedBehaviour(String.format("Attempting to change %s after it has been included in dependency resolution", getDisplayName()));
