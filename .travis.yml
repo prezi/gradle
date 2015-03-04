@@ -4,9 +4,14 @@ jdk:
 install:
   - true
 script:
-  - ./gradlew pullRequestValidation
+  - ./gradlew $TASK
 env:
-  - TERM=dumb
+  global:
+    - TERM=dumb
+  matrix:
+    - TASK=pullRequestValidation
+    - TASK=check
 branches:
   only:
     - master
+    - travis-integration-test
