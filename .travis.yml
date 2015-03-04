@@ -4,7 +4,7 @@ jdk:
 install:
   - true
 script:
-  - ./gradlew $TASK
+  - ./gradlew $TASK --continue
 env:
   global:
     - TERM=dumb
