@@ -15,3 +15,4 @@ branches:
   only:
     - master
     - travis-integration-test
+sudo: false
